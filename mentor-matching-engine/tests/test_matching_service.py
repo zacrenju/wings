@@ -121,11 +121,29 @@ def test_best_mentor_is_selected():
     """
     When multiple mentors are available for one mentee,
     the highest-scoring mentor should be selected.
+
+    mentor_1 has only Python in its skills with no
+    expertise or mentoring_topics, so its capability set
+    is strictly smaller than mentor_2's.
+    mentor_2 covers both Python and Machine Learning, which
+    is exactly what the mentee wants to learn.
+
+    Note: create_mentor uses `or` for defaults so empty lists
+    cannot be passed through it — mentor_1 is built directly.
     """
 
-    mentor_1 = create_mentor(
-        "m1",
+    mentor_1 = Mentor(
+        id="m1",
+        name="John",
         skills=["Python"],
+        expertise=[],
+        industry="Aviation",
+        years_experience=10,
+        experience_level="senior",
+        mentoring_topics=[],
+        availability=["Monday", "Wednesday"],
+        preferred_mentee_experience_levels=["junior"],
+        preferred_industries=["Aviation"],
     )
 
     mentor_2 = create_mentor(
@@ -327,20 +345,44 @@ def test_no_viable_candidates_returns_empty():
     """
     If the candidate generator produces no viable
     candidates, the service should return no matches.
+
+    All scoring dimensions are deliberately mismatched so
+    the final score is 0.0 and the candidate is filtered out:
+      - skills/expertise/topics: Java vs Python       → 0.0
+      - industry: Banking vs Aviation                 → 0.0
+      - experience: junior mentor < senior mentee     → 0.5 (but
+        experience weight is small; total remains 0.0 once
+        industry and skill/expertise/topic are all 0)
+      - availability: Saturday vs Sunday              → 0.0
     """
 
-    mentor = create_mentor(
-        "m1",
+    mentor = Mentor(
+        id="m1",
+        name="John",
         skills=["Java"],
         expertise=["Java"],
+        industry="Banking",
+        years_experience=2,
+        experience_level="junior",
         mentoring_topics=["Java"],
+        availability=["Saturday"],
+        preferred_mentee_experience_levels=["senior"],
+        preferred_industries=["Banking"],
     )
 
-    mentee = create_mentee(
-        "e1",
+    mentee = Mentee(
+        id="e1",
+        name="Alice",
         skills=["Python"],
         skills_to_learn=["Python"],
         interests=["Python"],
+        industry="Aviation",
+        years_experience=8,
+        experience_level="senior",
+        availability=["Sunday"],
+        preferred_mentor_experience_levels=["senior"],
+        preferred_industries=["Aviation"],
+        preferred_mentor_topics=["Machine Learning"],
     )
 
     service = MatchingService()

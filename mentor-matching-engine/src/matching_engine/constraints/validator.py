@@ -64,6 +64,11 @@ class MatchingConstraintValidator:
             mentee=mentee,
             violations=violations,
         )
+        self._check_mentor_experience_preference(
+            mentor=mentor,
+            mentee=mentee,
+            violations=violations,
+     )
 
         return ConstraintResult(
             is_valid=len(violations) == 0,
@@ -175,3 +180,36 @@ class MatchingConstraintValidator:
                 f"Mentee industry '{mentee.industry}' "
                 f"is not preferred by mentor {mentor.id}."
             )
+    @staticmethod
+    def _check_mentor_experience_preference(
+       mentor: Mentor,
+       mentee: Mentee,
+       violations: list[str],
+      ) -> None:
+        """
+     Check whether the mentor's experience level is acceptable
+     to the mentee.
+
+     An empty preference list means no restriction.
+        """
+
+        if not mentee.preferred_mentor_experience_levels:
+         return
+
+        if not mentor.experience_level:
+         return
+
+        preferred_levels = {
+          level.strip().lower()
+          for level in mentee.preferred_mentor_experience_levels
+          if level and level.strip()
+    }
+
+        mentor_level = mentor.experience_level.strip().lower()
+
+        if mentor_level not in preferred_levels:
+            violations.append(
+            f"Mentor experience level "
+            f"'{mentor.experience_level}' "
+            f"is not preferred by mentee {mentee.id}."
+        )
